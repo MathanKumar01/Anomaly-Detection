@@ -1,15 +1,19 @@
 import math
 
+
 class BehaviorAnalyzer:
 
-    def __init__(self):
+    def __init__(self, max_missing=60):
 
         self.previous_positions = {}
         self.time_in_scene = {}
+        self.missing_frames = {}
+        self.max_missing = max_missing
 
     def analyze(self, features):
 
         behaviors = []
+        active_tracks = set()
 
         for obj in features:
 
@@ -17,6 +21,11 @@ class BehaviorAnalyzer:
                 continue
 
             track_id = obj["track_id"]
+            if track_id is None or track_id < 0:
+                continue
+
+            active_tracks.add(track_id)
+            self.missing_frames[track_id] = 0
 
             x = obj["center_x"]
             y = obj["center_y"]
@@ -65,12 +74,21 @@ class BehaviorAnalyzer:
 
                 "y": y,
 
-                "speed": round(speed,2),
+                "speed": round(speed, 2),
 
                 "direction": direction,
 
                 "time": self.time_in_scene[track_id]
 
             })
+
+        # Prune inactive tracks
+        for track_id in list(self.previous_positions.keys()):
+            if track_id not in active_tracks:
+                self.missing_frames[track_id] = self.missing_frames.get(track_id, 0) + 1
+                if self.missing_frames[track_id] > self.max_missing:
+                    self.previous_positions.pop(track_id, None)
+                    self.time_in_scene.pop(track_id, None)
+                    self.missing_frames.pop(track_id, None)
 
         return behaviors

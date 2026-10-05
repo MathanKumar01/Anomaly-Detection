@@ -13,7 +13,6 @@ class EventStateManager:
     def update(self, frame_number, events):
 
         output_events = []
-
         current_tracks = set()
 
         # ---------------------------------------------
@@ -24,10 +23,6 @@ class EventStateManager:
 
             track_id = event["track_id"]
             event_name = event["event"]
-
-            # Ignore Scene Events
-            if track_id == "SCENE":
-                continue
 
             current_tracks.add(track_id)
 
@@ -42,29 +37,18 @@ class EventStateManager:
                     active = self.active_events[track_id]
 
                     output_events.append({
-
                         "track_id": track_id,
-
                         "event": active["event"],
-
                         "state": "ENDED",
-
                         "frame": frame_number
-
                     })
 
                     self.completed_events.append({
-
                         "track_id": track_id,
-
                         "event": active["event"],
-
                         "start": active["start_frame"],
-
                         "end": frame_number,
-
                         "duration": frame_number - active["start_frame"]
-
                     })
 
                     del self.active_events[track_id]
@@ -78,27 +62,17 @@ class EventStateManager:
             if track_id not in self.active_events:
 
                 self.active_events[track_id] = {
-
                     "event": event_name,
-
                     "start_frame": frame_number,
-
                     "last_seen": frame_number,
-
                     "duration": 0
-
                 }
 
                 output_events.append({
-
                     "track_id": track_id,
-
                     "event": event_name,
-
                     "state": "STARTED",
-
                     "frame": frame_number
-
                 })
 
                 continue
@@ -112,23 +86,13 @@ class EventStateManager:
             if active["event"] == event_name:
 
                 active["last_seen"] = frame_number
-
-                active["duration"] = (
-
-                    frame_number - active["start_frame"]
-
-                )
+                active["duration"] = frame_number - active["start_frame"]
 
                 output_events.append({
-
                     "track_id": track_id,
-
                     "event": event_name,
-
                     "state": "ACTIVE",
-
                     "frame": frame_number
-
                 })
 
             # ---------------------------------------------
@@ -138,57 +102,36 @@ class EventStateManager:
             else:
 
                 output_events.append({
-
                     "track_id": track_id,
-
                     "event": active["event"],
-
                     "state": "ENDED",
-
                     "frame": frame_number
-
                 })
 
                 self.completed_events.append({
-
                     "track_id": track_id,
-
                     "event": active["event"],
-
                     "start": active["start_frame"],
-
                     "end": frame_number,
-
                     "duration": frame_number - active["start_frame"]
-
                 })
 
                 self.active_events[track_id] = {
-
                     "event": event_name,
-
                     "start_frame": frame_number,
-
                     "last_seen": frame_number,
-
                     "duration": 0
-
                 }
 
                 output_events.append({
-
                     "track_id": track_id,
-
                     "event": event_name,
-
                     "state": "STARTED",
-
                     "frame": frame_number
-
                 })
 
         # ---------------------------------------------
-        # Remove Lost Tracks
+        # Remove Lost Tracks / Inactive Events
         # ---------------------------------------------
 
         remove_tracks = []
@@ -201,35 +144,23 @@ class EventStateManager:
             if frame_number - active["last_seen"] >= self.end_threshold:
 
                 output_events.append({
-
                     "track_id": track_id,
-
                     "event": active["event"],
-
                     "state": "ENDED",
-
                     "frame": frame_number
-
                 })
 
                 self.completed_events.append({
-
                     "track_id": track_id,
-
                     "event": active["event"],
-
                     "start": active["start_frame"],
-
                     "end": frame_number,
-
                     "duration": frame_number - active["start_frame"]
-
                 })
 
                 remove_tracks.append(track_id)
 
         for track_id in remove_tracks:
-
             del self.active_events[track_id]
 
         return output_events
@@ -243,21 +174,14 @@ class EventStateManager:
         print("\n========== ACTIVE EVENTS ==========")
 
         if len(self.active_events) == 0:
-
             print("No Active Events")
-
             return
 
         for track_id, event in self.active_events.items():
-
             print("--------------------------------")
-
             print(f"Track ID : {track_id}")
-
             print(f"Event    : {event['event']}")
-
             print(f"Started  : {event['start_frame']}")
-
             print(f"Duration : {event['duration']} Frames")
 
     # ======================================================
@@ -269,21 +193,13 @@ class EventStateManager:
         print("\n========== COMPLETED EVENTS ==========")
 
         if len(self.completed_events) == 0:
-
             print("No Completed Events")
-
             return
 
-        for event in self.completed_events:
-
+        for event in self.completed_events[-5:]:  # Show recent 5
             print("--------------------------------")
-
             print(f"Track ID : {event['track_id']}")
-
             print(f"Event    : {event['event']}")
-
             print(f"Start    : {event['start']}")
-
             print(f"End      : {event['end']}")
-
             print(f"Duration : {event['duration']} Frames")

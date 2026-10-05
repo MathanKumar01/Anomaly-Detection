@@ -3,10 +3,9 @@ from ultralytics import YOLO
 
 class PoseDetector:
 
-    def __init__(self):
+    def __init__(self, model_path="yolo11n-pose.pt"):
 
-        # YOLO11 Pose Model
-        self.model = YOLO("yolo11n-pose.pt")
+        self.model = YOLO(model_path)
 
     def detect(self, frame):
 
